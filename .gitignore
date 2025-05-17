@@ -6,7 +6,7 @@ yarn.lock
 .npmrc
 pnpm-lock.yaml
 node_modules/
-lib/
+dist/
 coverage/
 
 examples/nextjs/.next/

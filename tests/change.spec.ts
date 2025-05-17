@@ -11,7 +11,7 @@ import {
   SUSPENSE,
   TRANSLATIONS_KEYS,
   createDefaultProps,
-  createTranslations
+  createTranslations,
 } from './shared.js';
 
 describe('change', () => {
@@ -19,7 +19,7 @@ describe('change', () => {
     [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0]],
     [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[1]],
     [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[0]],
-    [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]]
+    [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]],
   ])('switch lang correctly from "%s" to "%s"', async (from, to) => {
     expect.assertions(2);
 
@@ -28,10 +28,9 @@ describe('change', () => {
         Module.TranslationProvider,
         {
           language: from,
-          translations: createTranslations()
+          translations: createTranslations(),
         },
 
-        // @ts-expect-error DefinitelyTyped issue
         React.createElement(() => {
           const translation = Module.useTranslationChange();
 
@@ -53,30 +52,46 @@ describe('change', () => {
   });
 
   it.each([
-    [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0], [
-      [TRANSLATIONS_KEYS[0], SUSPENSE],
-      [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0]],
-      [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0]],
-      [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0]]
-    ]],
-    [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[1], [
-      [TRANSLATIONS_KEYS[0], SUSPENSE],
-      [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0]],
-      TRANSLATIONS_KEYS[1],
-      TRANSLATIONS_KEYS[1]
-    ]],
-    [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[0], [
-      [TRANSLATIONS_KEYS[1], SUSPENSE],
-      [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]],
+    [
       TRANSLATIONS_KEYS[0],
-      TRANSLATIONS_KEYS[0]
-    ]],
-    [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1], [
-      [TRANSLATIONS_KEYS[1], SUSPENSE],
-      [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]],
-      [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]],
-      [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]]
-    ]]
+      TRANSLATIONS_KEYS[0],
+      [
+        [TRANSLATIONS_KEYS[0], SUSPENSE],
+        [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0]],
+        [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0]],
+        [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0]],
+      ],
+    ],
+    [
+      TRANSLATIONS_KEYS[0],
+      TRANSLATIONS_KEYS[1],
+      [
+        [TRANSLATIONS_KEYS[0], SUSPENSE],
+        [TRANSLATIONS_KEYS[0], TRANSLATIONS_KEYS[0]],
+        TRANSLATIONS_KEYS[1],
+        TRANSLATIONS_KEYS[1],
+      ],
+    ],
+    [
+      TRANSLATIONS_KEYS[1],
+      TRANSLATIONS_KEYS[0],
+      [
+        [TRANSLATIONS_KEYS[1], SUSPENSE],
+        [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]],
+        TRANSLATIONS_KEYS[0],
+        TRANSLATIONS_KEYS[0],
+      ],
+    ],
+    [
+      TRANSLATIONS_KEYS[1],
+      TRANSLATIONS_KEYS[1],
+      [
+        [TRANSLATIONS_KEYS[1], SUSPENSE],
+        [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]],
+        [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]],
+        [TRANSLATIONS_KEYS[1], TRANSLATIONS_KEYS[1]],
+      ],
+    ],
   ])('suspend correctly from "%s" to "%s"', async (from, to, cases) => {
     expect.assertions(4);
 
@@ -90,10 +105,9 @@ describe('change', () => {
 
           // Prevent fallback
           fallback: 'fallback',
-          translations: createTranslations()
+          translations: createTranslations(),
         },
 
-        // @ts-expect-error DefinitelyTyped issue
         React.createElement(() => {
           const translation = Module.useTranslationChange();
 
@@ -101,9 +115,13 @@ describe('change', () => {
 
           return translation.lang;
         }),
-        React.createElement(Module.Translation, {
-          path: from
-        }, SUSPENSE)
+        React.createElement(
+          Module.Translation,
+          {
+            path: from,
+          },
+          SUSPENSE
+        )
       )
     );
 
@@ -135,7 +153,6 @@ describe('change', () => {
         Module.TranslationProvider,
         createDefaultProps(),
 
-        // @ts-expect-error DefinitelyTyped issue
         React.createElement(() => {
           const translation = Module.useTranslationChange();
 
@@ -147,7 +164,6 @@ describe('change', () => {
           Module.TranslationProvider,
           createDefaultProps(),
 
-          // @ts-expect-error DefinitelyTyped issue
           React.createElement(() => {
             const translation = Module.useTranslationChange();
 
@@ -160,7 +176,6 @@ describe('change', () => {
           Module.TranslationProvider,
           createDefaultProps(),
 
-          // @ts-expect-error DefinitelyTyped issue
           React.createElement(() => {
             const translation = Module.useTranslationChange();
 
@@ -175,7 +190,7 @@ describe('change', () => {
     expect(component.toJSON()).toStrictEqual([
       TRANSLATIONS_KEYS[0],
       TRANSLATIONS_KEYS[0],
-      TRANSLATIONS_KEYS[0]
+      TRANSLATIONS_KEYS[0],
     ]);
 
     await renderer.act(() => changeLeft(TRANSLATIONS_KEYS[1]));
@@ -183,7 +198,7 @@ describe('change', () => {
     expect(component.toJSON()).toStrictEqual([
       TRANSLATIONS_KEYS[1],
       TRANSLATIONS_KEYS[1],
-      TRANSLATIONS_KEYS[1]
+      TRANSLATIONS_KEYS[1],
     ]);
 
     await renderer.act(() => changeRight(TRANSLATIONS_KEYS[0]));
@@ -191,7 +206,7 @@ describe('change', () => {
     expect(component.toJSON()).toStrictEqual([
       TRANSLATIONS_KEYS[0],
       TRANSLATIONS_KEYS[0],
-      TRANSLATIONS_KEYS[0]
+      TRANSLATIONS_KEYS[0],
     ]);
 
     await renderer.act(() => changeParent(TRANSLATIONS_KEYS[1]));
@@ -199,7 +214,7 @@ describe('change', () => {
     expect(component.toJSON()).toStrictEqual([
       TRANSLATIONS_KEYS[1],
       TRANSLATIONS_KEYS[1],
-      TRANSLATIONS_KEYS[1]
+      TRANSLATIONS_KEYS[1],
     ]);
   });
 });

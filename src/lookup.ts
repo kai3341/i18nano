@@ -1,45 +1,40 @@
 import type { TranslationValues } from './types.js';
 
-import { EMPTY } from './const.js';
 import { plain } from './utils.js';
 
 /**
  * @param path - property path like 'a.b.c'
- * @param values - object
- * @returns string from values if found otherwise empty string
+ * @param values - object for mustache templates
+ * @returns string from values if found otherwise undefined
  */
-export const lookup = (path: string | number, values: TranslationValues): string => {
+export const lookup = (
+  path: string | number,
+  values: TranslationValues
+): string | undefined => {
   let key = String(path);
+  let inner;
 
   if (key in values) {
-    const inner = values[key as any];
+    if (typeof (inner = values[key as any]) === 'string') return inner;
 
-    if (typeof inner === 'string') {
-      return inner;
-    }
-
-    return EMPTY;
+    return;
   }
 
-  if (plain(values)) {
-    return EMPTY;
-  }
+  if (plain(values)) return;
 
   const parts = key.split('.');
 
-  for (let i = 0, length = parts.length; i < length && typeof values === 'object'; ++i) {
+  for (
+    let i = 0, length = parts.length;
+    i < length && typeof values === 'object';
+    ++i
+  ) {
     key = parts[i];
 
     if (key in values) {
-      const inner = values[key as any];
-
-      if (typeof inner === 'string') {
-        return inner;
-      }
+      if (typeof (inner = values[key as any]) === 'string') return inner;
 
       values = inner;
     }
   }
-
-  return EMPTY;
 };

@@ -4,7 +4,7 @@ import type {
   TranslationFunction,
   TranslationProps,
   TranslationProviderProps,
-  TranslationValues
+  TranslationValues,
 } from './types.js';
 
 import { React, useContext } from './react.js';
@@ -12,14 +12,15 @@ import { React, useContext } from './react.js';
 import { EMPTY, PLAIN } from './const.js';
 import { invoke, noop, notranslate } from './utils.js';
 import { cached, suspend } from './suspend.js';
-import { lookup } from './lookup.js';
+import { interpolate } from './interpolate.js';
 
-export const TranslationContext = React.createContext<TranslationFunction>(notranslate);
+export const TranslationContext =
+  React.createContext<TranslationFunction>(notranslate);
 export const TranslationChangeContext = React.createContext<TranslationChange>({
   all: [],
   lang: EMPTY,
   change: noop,
-  preload: noop
+  preload: noop,
 });
 
 export const TranslationProvider: FCC<TranslationProviderProps> = ({
@@ -33,7 +34,7 @@ export const TranslationProvider: FCC<TranslationProviderProps> = ({
 
   transition = false,
 
-  children
+  children,
 }) => {
   const parentTranslate = useContext(TranslationContext);
   const parentTranslateChange = useContext(TranslationChangeContext);
@@ -54,9 +55,7 @@ export const TranslationProvider: FCC<TranslationProviderProps> = ({
   const withTransition = transition ? React.startTransition : invoke;
 
   const preload = (next: string) => {
-    if (next in translations) {
-      cached(translations[next]);
-    }
+    if (next in translations) cached(translations[next]);
   };
 
   const preloadRecursive = (next: string) => {
@@ -64,21 +63,13 @@ export const TranslationProvider: FCC<TranslationProviderProps> = ({
     parentTranslateChange.preload(next);
   };
 
-  if (preloadLanguage) {
-    preload(current);
-  }
-
-  if (preloadFallback) {
-    preload(fallback);
-  }
+  if (preloadLanguage) preload(current);
+  if (preloadFallback) preload(fallback);
 
   const change = (next: string) => {
     if (next in translations) {
       setCurrent(next);
-
-      withTransition(() => {
-        setLanguage(next);
-      });
+      withTransition(() => setLanguage(next));
     }
   };
 
@@ -87,62 +78,47 @@ export const TranslationProvider: FCC<TranslationProviderProps> = ({
     parentTranslateChange.change(next);
   };
 
-  if (hasParentLanguage && current !== parentLanguage) {
-    change(parentLanguage);
-  }
-
-  const interpolate = (path: string, values: TranslationValues, source: TranslationValues) => {
-    const template = lookup(path, source);
-
-    if (template.length === 0) {
-      return EMPTY;
-    }
-
-    return template.replace(/{{(.+?)}}/g, (_, key) => {
-      let result = lookup(key, values);
-
-      if (result.length === 0) {
-        result = lookup(key, source);
-      }
-
-      if (result.length === 0) {
-        result = parentTranslate(key, values);
-      }
-
-      return result;
-    });
-  };
+  if (hasParentLanguage && current !== parentLanguage) change(parentLanguage);
 
   const translate: TranslationFunction = (path, values = PLAIN) => {
-    let result = EMPTY;
+    let result;
 
-    if (lang in translations) {
-      result = interpolate(path, values, suspend(translations[lang]));
-    }
+    if (
+      lang in translations &&
+      (result = interpolate(path, values, suspend(translations[lang]))) !==
+        undefined
+    )
+      return result;
 
-    if (result.length === 0 && lang !== fallback && fallback in translations) {
-      result = interpolate(path, values, suspend(translations[fallback]));
-    }
+    if (
+      lang !== fallback &&
+      fallback in translations &&
+      (result = interpolate(path, values, suspend(translations[fallback]))) !==
+        undefined
+    )
+      return result;
 
-    if (result.length === 0) {
-      result = parentTranslate(path, values);
-    }
+    if ((result = parentTranslate(path, values)) !== undefined) return result;
 
-    return result;
+    return EMPTY;
   };
 
-  const TranslationContextProps = React.useMemo(() => ({
-    value: translate
-  }), [lang]);
+  const TranslationContextProps = React.useMemo(
+    () => ({ value: translate }),
+    [lang]
+  );
 
-  const TranslationChangeContextProps = React.useMemo(() => ({
-    value: {
-      all: Object.keys(translations),
-      lang: current,
-      change: changeRecursive,
-      preload: preloadRecursive
-    }
-  }), [current]);
+  const TranslationChangeContextProps = React.useMemo(
+    () => ({
+      value: {
+        all: Object.keys(translations),
+        lang: current,
+        change: changeRecursive,
+        preload: preloadRecursive,
+      },
+    }),
+    [current]
+  );
 
   return React.createElement(
     TranslationChangeContext.Provider,
@@ -173,14 +149,13 @@ export const useTranslationChange = () => useContext(TranslationChangeContext);
  * @see {@link Translation}
  */
 // @ts-expect-error DefinitelyTyped issue
-export const TranslationRender: FC<TranslationProps> = React.memo(({
-  path,
-  values = PLAIN
-}) => {
-  const translate = useTranslation();
+export const TranslationRender: FC<TranslationProps> = React.memo(
+  ({ path, values = PLAIN }) => {
+    const translate = useTranslation();
 
-  return translate(path, values);
-});
+    return translate(path, values);
+  }
+);
 
 /**
  * Recommended way to use i18nano
@@ -194,14 +169,11 @@ export const TranslationRender: FC<TranslationProps> = React.memo(({
 export const Translation: FCC<TranslationProps> = ({
   children,
   path,
-  values = PLAIN
+  values = PLAIN,
 }) => {
   return React.createElement(
     React.Suspense,
     { fallback: children },
-    React.createElement(
-      TranslationRender,
-      { path, values }
-    )
+    React.createElement(TranslationRender, { path, values })
   );
 };
