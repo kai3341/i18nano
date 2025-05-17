@@ -1,13 +1,13 @@
+export { interpolate } from './interpolate.js';
+
 export {
   Translation,
   TranslationRender,
   TranslationProvider,
-
   TranslationContext,
   TranslationChangeContext,
-
   useTranslation,
-  useTranslationChange
+  useTranslationChange,
 } from './implementation.js';
 
 export type {
@@ -17,5 +17,5 @@ export type {
   TranslationPromise,
   TranslationProps,
   TranslationProviderProps,
-  TranslationValues
+  TranslationValues,
 } from './types.js';
